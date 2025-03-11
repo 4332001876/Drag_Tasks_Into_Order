@@ -1,0 +1,170 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task Priority Manager - Tasks{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <!-- Quick Add Form -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Add New Task</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'task_create' %}" class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-8">
+                        <input type="text" name="title" class="form-control" placeholder="Task title" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Add Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="card">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Task Priority List</h5>
+                <span class="badge bg-secondary">{{ tasks.count }} Tasks</span>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                <div id="task-list" class="task-list">
+                    {% for task in tasks %}
+                    <div id="task-{{ task.id }}"
+                        class="task-item flight-strip priority-{% if task.priority_level == 1 %}high{% elif task.priority_level == 2 %}medium{% else %}low{% endif %} {% if task.completed %}completed{% endif %}"
+                        data-id="{{ task.id }}" {% if task.category
+                        %}style="border-left-color: {{ task.category.color }};" {% endif %}>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="width: 80%;">
+                                <span class="task-title">{{ task.title }}</span>
+                                {% if task.description %}
+                                <div class="task-description">{{ task.description }}</div>
+                                {% endif %}
+                                <div class="task-metadata">
+                                    <span><i class="bi bi-calendar-date"></i> {{ task.created_at|date:"M d, Y" }}</span>
+
+                                    {% if task.due_date %}
+                                    {% if task.is_overdue %}
+                                    <span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Overdue:
+                                        {{ task.due_date|date:"M d" }}</span>
+                                    {% elif task.is_due_soon %}
+                                    <span class="text-warning"><i class="bi bi-clock"></i> Due soon: {{
+                                        task.due_date|date:"M d" }}</span>
+                                    {% else %}
+                                    <span><i class="bi bi-calendar-check"></i> Due: {{ task.due_date|date:"M d"
+                                        }}</span>
+                                    {% endif %}
+                                    {% endif %}
+
+                                    {% if task.category %}
+                                    <span style="color: {{ task.category.color }}">
+                                        <i class="bi bi-tag-fill"></i> {{ task.category.name }}
+                                    </span>
+                                    {% endif %}
+
+                                    <span
+                                        class="badge {% if task.priority_level == 1 %}bg-danger{% elif task.priority_level == 2 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                        {{ task.get_priority_level_display }}
+                                    </span>
+
+                                    {% if task.completed %}
+                                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <a href="{% url 'task_toggle_complete' task.id %}"
+                                    class="btn btn-sm {% if task.completed %}btn-success{% else %}btn-outline-success{% endif %}">
+                                    {% if task.completed %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    {% else %}
+                                    <i class="bi bi-check-circle"></i>
+                                    {% endif %}
+                                </a>
+                                <a href="{% url 'task_update' task.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'task_delete' task.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="task-counter">{{ forloop.counter }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No tasks yet. Add your first task above!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function () {
+        // Make the task list sortable using jQuery UI
+        $("#task-list").sortable({
+            placeholder: "task-item ui-sortable-placeholder",
+            cursor: "move",
+            handle: ".task-title", // Only allow dragging by the title
+            opacity: 0.8, // Make the dragged item slightly transparent
+            update: function (event, ui) {
+                // When the order changes, get the new order
+                var taskIds = $(this).sortable("toArray").map(function (item) {
+                    return item.replace("task-", "");
+                });
+
+                // Show loading indicator
+                $("body").append('<div id="loading-indicator" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 9999;">Updating priorities...</div>');
+
+                // Send AJAX request to update the task order in the database
+                $.ajax({
+                    url: "{% url 'update_task_order' %}",
+                    type: "POST",
+                    data: {
+                        "task_ids[]": taskIds
+                    },
+                    success: function (response) {
+                        console.log("Task order updated successfully");
+                        // Update the counter numbers
+                        $(".task-counter").each(function (index) {
+                            $(this).text(index + 1);
+                        });
+
+                        // Remove loading indicator with a fade effect
+                        $("#loading-indicator").fadeOut(300, function () {
+                            $(this).remove();
+                        });
+                    },
+                    error: function (xhr) {
+                        console.error("Error updating task order: " + xhr.statusText);
+                        // Remove loading indicator
+                        $("#loading-indicator").remove();
+                        alert("Error updating task priorities. Please try again.");
+                    }
+                });
+            }
+        }).disableSelection();
+
+        // Add a nice highlight effect when hovering over tasks
+        $(".task-item").hover(
+            function () {
+                $(this).css("transform", "translateX(5px)");
+            },
+            function () {
+                $(this).css("transform", "translateX(0)");
+            }
+        );
+    });
+</script>
+{% endblock %}
