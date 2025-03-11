@@ -28,7 +28,7 @@ A Django web application for managing tasks with a drag-and-drop interface inspi
    ```
 5. Run the development server:
    ```
-   python manage.py runserver
+   python manage.py runserver 0.0.0.0:8000
    ```
 
 ## Initial Setup

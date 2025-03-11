@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 import datetime
 
 # Create your models here.
@@ -7,9 +8,14 @@ import datetime
 class TaskCategory(models.Model):
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=20, default="#3498db")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories', null=True)
     
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name_plural = "Task Categories"
+        unique_together = ['name', 'user']
 
 class Task(models.Model):
     PRIORITY_CHOICES = (
@@ -27,6 +33,7 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks', null=True)
     
     class Meta:
         ordering = ['priority']  # Default ordering by priority
