@@ -37,8 +37,7 @@
                     {% for task in tasks %}
                     <div id="task-{{ task.id }}"
                         class="task-item flight-strip priority-{% if task.priority_level == 1 %}high{% elif task.priority_level == 2 %}medium{% else %}low{% endif %} {% if task.completed %}completed{% endif %}"
-                        data-id="{{ task.id }}" {% if task.category
-                        %}style="border-left-color: {{ task.category.color }};" {% endif %}>
+                        data-id="{{ task.id }}">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="width: 80%;">
                                 <span class="task-title">{{ task.title }}</span>
@@ -53,11 +52,12 @@
                                     <span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Overdue:
                                         {{ task.due_date|date:"M d" }}</span>
                                     {% elif task.is_due_soon %}
-                                    <span class="text-warning"><i class="bi bi-clock"></i> Due soon: {{
-                                        task.due_date|date:"M d" }}</span>
+                                    <span class="text-warning"><i class="bi bi-clock"></i> Due soon:
+                                        {{ task.due_date|date:"M d" }}</span>
                                     {% else %}
-                                    <span><i class="bi bi-calendar-check"></i> Due: {{ task.due_date|date:"M d"
-                                        }}</span>
+                                    <span><i class="bi bi-calendar-check"></i>
+                                        Due: {{ task.due_date|date:"M d" }}
+                                    </span>
                                     {% endif %}
                                     {% endif %}
 
@@ -111,21 +111,53 @@
 
 {% block extra_js %}
 <script>
-    $(function () {
-        // Make the task list sortable using jQuery UI
-        $("#task-list").sortable({
-            placeholder: "task-item ui-sortable-placeholder",
-            cursor: "move",
-            handle: ".task-title", // Only allow dragging by the title
-            opacity: 0.8, // Make the dragged item slightly transparent
-            update: function (event, ui) {
-                // When the order changes, get the new order
-                var taskIds = $(this).sortable("toArray").map(function (item) {
-                    return item.replace("task-", "");
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get the task list element
+        const taskList = document.getElementById('task-list');
+
+        // Exit if no task list exists (no tasks)
+        if (!taskList) return;
+
+        // Set border colors for category colors
+        document.querySelectorAll('.task-item').forEach(function (item) {
+            const categorySpan = item.querySelector('.task-metadata span[style^="color:"]');
+            if (categorySpan) {
+                const color = categorySpan.style.color;
+                item.style.borderLeftColor = color;
+            }
+        });
+
+        // Initialize SortableJS
+        const sortable = Sortable.create(taskList, {
+            animation: 150,  // Animation speed (ms)
+            delay: 150,      // Time in ms when sorting should start (prevents unwanted moves on mobile)
+            delayOnTouchOnly: true,  // Only delay if user is using touch
+            handle: '.task-title, .task-description',  // Drag handle (restrict dragging to title and description)
+            ghostClass: 'sortable-ghost',  // Class for the drop placeholder
+            chosenClass: 'sortable-chosen',  // Class for the chosen item
+            dragClass: 'sortable-drag',  // Class for the dragging item
+            filter: '.btn, .btn-group',  // Prevent dragging when clicking on buttons
+            preventOnFilter: true,       // Prevent default action when clicking on filtered items
+
+            // When sorting ends and order changes
+            onEnd: function (evt) {
+                // If the order hasn't changed, do nothing
+                if (evt.oldIndex === evt.newIndex) return;
+
+                // Get all task IDs in the new order
+                const taskIds = Array.from(taskList.children).map(function (item) {
+                    return item.getAttribute('data-id');
                 });
 
                 // Show loading indicator
-                $("body").append('<div id="loading-indicator" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 9999;">Updating priorities...</div>');
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 9999;';
+                loadingIndicator.textContent = 'Updating priorities...';
+                document.body.appendChild(loadingIndicator);
+
+                // Update task counters
+                updateTaskCounters();
 
                 // Send AJAX request to update the task order in the database
                 $.ajax({
@@ -136,35 +168,46 @@
                     },
                     success: function (response) {
                         console.log("Task order updated successfully");
-                        // Update the counter numbers
-                        $(".task-counter").each(function (index) {
-                            $(this).text(index + 1);
-                        });
 
                         // Remove loading indicator with a fade effect
-                        $("#loading-indicator").fadeOut(300, function () {
-                            $(this).remove();
-                        });
+                        setTimeout(function () {
+                            loadingIndicator.style.opacity = '0';
+                            loadingIndicator.style.transition = 'opacity 300ms';
+                            setTimeout(function () {
+                                loadingIndicator.remove();
+                            }, 300);
+                        }, 500);
                     },
                     error: function (xhr) {
                         console.error("Error updating task order: " + xhr.statusText);
+
                         // Remove loading indicator
-                        $("#loading-indicator").remove();
+                        loadingIndicator.remove();
                         alert("Error updating task priorities. Please try again.");
                     }
                 });
             }
-        }).disableSelection();
+        });
 
-        // Add a nice highlight effect when hovering over tasks
-        $(".task-item").hover(
-            function () {
-                $(this).css("transform", "translateX(5px)");
-            },
-            function () {
-                $(this).css("transform", "translateX(0)");
-            }
-        );
+        // Function to update task counter numbers
+        function updateTaskCounters() {
+            const taskItems = taskList.querySelectorAll('.task-counter');
+            taskItems.forEach(function (counter, index) {
+                counter.textContent = index + 1;
+            });
+        }
+
+        // Add hover effect for tasks
+        const taskItems = document.querySelectorAll('.task-item');
+        taskItems.forEach(function (task) {
+            task.addEventListener('mouseenter', function () {
+                this.style.transform = 'translateX(5px)';
+            });
+
+            task.addEventListener('mouseleave', function () {
+                this.style.transform = 'translateX(0)';
+            });
+        });
     });
 </script>
 {% endblock %}

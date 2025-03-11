@@ -1,11 +1,11 @@
-# Flight Progress Style Task Manager
+# Flight Progress Strip Style Task Manager
 
 A Django web application for managing tasks with a drag-and-drop interface inspired by flight progress strips used in air traffic control.
 
 ## Features
 
 - Beautiful UI inspired by Flight Progress Strips
-- Drag and drop task prioritization
+- Drag and drop task prioritization using SortableJS
 - Color-coded task categories and priority levels
 - Due date tracking with overdue warnings
 - Task completion tracking
@@ -52,7 +52,7 @@ Create categories in the admin interface to organize your tasks by project, cont
 ## Technologies Used
 
 - Django
-- jQuery UI (for drag and drop functionality)
+- SortableJS (for drag and drop functionality)
 - Bootstrap 5 (for responsive design)
 - SQLite (default database)
 

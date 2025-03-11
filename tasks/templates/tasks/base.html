@@ -12,10 +12,11 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
-    <!-- jQuery and jQuery UI -->
+    <!-- jQuery (still needed for AJAX) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/smoothness/jquery-ui.css">
+
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <!-- Custom CSS -->
     <style>
@@ -44,19 +45,17 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .task-item.ui-sortable-placeholder {
-            visibility: visible !important;
+        .task-item.sortable-ghost {
             background-color: #f5f5f5;
             border: 2px dashed #ccc;
             box-shadow: none;
-            height: 80px;
-            /* Fixed height for placeholder */
+            opacity: 0.8;
         }
 
-        .task-item.ui-sortable-helper {
+        .task-item.sortable-chosen {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-            transform: rotate(1deg);
-            /* Slight rotation when dragging */
+            transform: scale(1.02);
+            z-index: 1000;
         }
 
         .task-item.completed {
@@ -151,6 +150,7 @@
         /* Small details area for task metadata */
         .task-metadata {
             display: flex;
+            flex-wrap: wrap;
             margin-top: 8px;
             font-size: 0.75rem;
             color: #95a5a6;
@@ -158,10 +158,16 @@
 
         .task-metadata span {
             margin-right: 12px;
+            margin-bottom: 4px;
         }
 
         .task-metadata i {
             margin-right: 4px;
+        }
+
+        /* Prevent text selection during drag */
+        .sortable-drag {
+            user-select: none;
         }
     </style>
 
@@ -171,7 +177,7 @@
 <body>
     <div class="container">
         <header class="mb-4">
-            <h1 class="display-4 text-center">Flight Progress Style Task Manager</h1>
+            <h1 class="display-5 text-center">Flight Progress Strip Style Task Manager</h1>
             <p class="lead text-center">Drag and drop tasks to prioritize them</p>
         </header>
 
@@ -180,7 +186,7 @@
         </main>
 
         <footer class="mt-5 text-center text-muted">
-            <p>Flight Progress Style Task Manager - Prioritize your tasks efficiently</p>
+            <p>Flight Progress Strip Style Task Manager - Prioritize your tasks efficiently</p>
         </footer>
     </div>
 
