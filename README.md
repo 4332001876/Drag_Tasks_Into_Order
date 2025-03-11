@@ -18,18 +18,47 @@ A Django web application for managing tasks with a drag-and-drop interface inspi
    ```
    pip install -r requirements.txt
    ```
-3. Apply migrations:
+3. Generate a secret key and set environment variable:
+   ```bash
+   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+   # Add to your environment variables (Unix):
+   export DJANGO_SECRET_KEY='your_generated_secret_key_here'
+   # For Windows CMD:
+   set DJANGO_SECRET_KEY=your_generated_secret_key_here
+   ```
+   For permanent storage, add this to your shell configuration file (.bashrc, .zshrc) or use a .env file. Remember to add `.env` to your `.gitignore`.
+4. Apply migrations:
    ```
    python manage.py migrate
    ```
-4. Create a superuser (for admin access):
+5. Create a superuser (for admin access):
    ```
    python manage.py createsuperuser
    ```
-5. Run the development server:
+6. Run the development server:
    ```
    python manage.py runserver 0.0.0.0:8000
    ```
+
+### Production Deployment with Gunicorn
+
+For production environments, use Gunicorn instead of the development server:
+
+1. Install Gunicorn:
+   ```
+   pip install gunicorn
+   ```
+
+2. Start the application with Gunicorn:
+   ```
+   gunicorn --bind 0.0.0.0:8000 mainsite.wsgi:application
+   ```
+
+   Optional parameters:
+   - `--workers 3` : Number of worker processes
+   - `--daemon` : Run in background
+   - `--log-file=/path/to/gunicorn.log` : Log file location
+
 
 ## Initial Setup
 

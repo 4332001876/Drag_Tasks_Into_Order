@@ -23,8 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 try:
     SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+    if not SECRET_KEY:
+        raise Exception("DJANGO_SECRET_KEY not found in environment variables")
 except:
-    SECRET_KEY = "k@tjd4p^@pv^9h6rji65pq667@^0(jh19o$=z9l-0vh5uu1l7k"
+    raise Exception("DJANGO_SECRET_KEY not found in environment variables")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -134,3 +136,15 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Message settings
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# 添加安全相关设置
+SAVE_MODE = False
+if SAVE_MODE:   
+    SECURE_SSL_REDIRECT = True  # 重定向HTTP到HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 开启HSTS (HTTP严格传输安全)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # 包括子域名
+    SECURE_HSTS_PRELOAD = True  # 预加载选项
+    SECURE_CONTENT_TYPE_NOSNIFF = True  # 防止浏览器猜测内容类型
+    SECURE_BROWSER_XSS_FILTER = True  # 启用XSS过滤
+    SESSION_COOKIE_SECURE = True  # 仅通过HTTPS发送cookie
+    CSRF_COOKIE_SECURE = True  # 仅通过HTTPS发送CSRF cookie
