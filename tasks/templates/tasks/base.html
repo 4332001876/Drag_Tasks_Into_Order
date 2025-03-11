@@ -20,6 +20,16 @@
 
     <!-- Custom CSS -->
     <style>
+        /* Prevent text selection globally */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            /* IE/Edge */
+            -moz-user-select: none;
+            /* Firefox */
+        }
+
         body {
             padding-top: 20px;
             background-color: #f0f3f7;
@@ -67,11 +77,15 @@
             font-weight: bold;
             margin-right: 10px;
             font-size: 1.1rem;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .task-description {
             color: #666;
             font-size: 0.9rem;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         /* Flight progress strip specific styling */
