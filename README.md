@@ -2,6 +2,8 @@
 
 A Django web application for managing tasks with a drag-and-drop interface inspired by flight progress strips used in air traffic control.
 
+<img src="./pics/Flight_Progress_Strip_Style_Task_Manager.png" alt="Screenshot of the application" width="100%">
+
 ## Features
 
 - Beautiful UI inspired by Flight Progress Strips
